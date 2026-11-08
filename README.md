@@ -1,5 +1,8 @@
 # RiTech SAS — Backend y panel visual
 
+# URL 
+https://ritech-da5n.onrender.com/index.html#how
+
 Software de apoyo a decisiones de inversión para RiTech SAS. Las inversiones
 de la empresa dependen del **doble** del comportamiento del índice NASDAQ
 100: si el índice sube 2%, RiTech gana 4%; si baja 2%, RiTech pierde 4%.
