@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RiTech · Operación TI</title>
+  <link rel="stylesheet" href="css/estilos.css?v=20261108a" />
+  <script src="js/tema.js?v=20261108a"></script>
+</head>
+<body>
+  <div id="barra"></div>
+
+  <main class="app-shell operations-shell">
+    <header class="page-intro">
+      <div>
+        <span class="section-kicker">GESTIÓN TECNOLÓGICA</span>
+        <h1>Servicios y operación.</h1>
+        <p>Estado de la plataforma, conectividad de datos y actividad del sistema.</p>
+      </div>
+      <button class="refresh-button" id="actualizar-operacion" type="button">
+        <span>Actualizar estado</span><span aria-hidden="true">↻</span>
+      </button>
+    </header>
+
+    <section class="operations-status" aria-live="polite">
+      <article class="app-panel service-status">
+        <span class="service-symbol">API</span>
+        <div><span class="section-kicker">SERVICIO</span><h2>Backend RiTech</h2><p id="estado-api" class="status-value">Consultando...</p></div>
+      </article>
+      <article class="app-panel service-status">
+        <span class="service-symbol database-symbol">DB</span>
+        <div><span class="section-kicker">PERSISTENCIA</span><h2>Base de datos</h2><p id="estado-bd" class="status-value">Consultando...</p></div>
+      </article>
+      <article class="app-panel service-status">
+        <span class="service-symbol market-symbol">MKT</span>
+        <div><span class="section-kicker">COTIZACIONES</span><h2>Fuente de mercado</h2><p id="estado-mercado" class="status-value">Consultando...</p></div>
+      </article>
+      <article class="app-panel service-status">
+        <span class="service-symbol alert-symbol">IA</span>
+        <div><span class="section-kicker">ALERTAS</span><h2>Generación IA</h2><p id="estado-alertas" class="status-value">Consultando...</p></div>
+      </article>
+    </section>
+
+    <section class="history-metrics operation-metrics">
+      <article class="metric-panel"><span>Usuarios</span><strong id="metric-usuarios">—</strong><small>cuentas registradas</small></article>
+      <article class="metric-panel"><span>Simulaciones</span><strong id="metric-simulaciones">—</strong><small>operaciones guardadas</small></article>
+      <article class="metric-panel"><span>Capital analizado</span><strong id="metric-capital">—</strong><small>capital inicial acumulado</small></article>
+      <article class="metric-panel"><span>Rendimiento promedio</span><strong id="metric-rendimiento">—</strong><small>simulaciones registradas</small></article>
+    </section>
+
+    <section class="app-panel operation-details">
+      <div class="panel-heading"><div><span class="section-kicker">ÚLTIMA VERIFICACIÓN</span><h2>Resumen de disponibilidad</h2></div><span id="actualizado" class="chart-unit">—</span></div>
+      <p id="mensaje-operacion" class="operation-message">La vista consulta la base de datos al cargar y se actualiza automáticamente cada 30 segundos.</p>
+      <div id="error-operacion" role="status"></div>
+    </section>
+  </main>
+
+  <script src="js/api.js?v=20261108a"></script>
+  <script src="js/sesion.js?v=20261108a"></script>
+  <script src="js/barra.js?v=20261108a"></script>
+  <script>
+    const usuario = SesionUsuario.exigirRol(["GESTOR_TI"]);
+    if (usuario) {
+      renderizarBarra("barra", "operacion");
+      cargarOperacion();
+      window.setInterval(cargarOperacion, 30000);
+    }
+
+    function formatoMoneda(valor) {
+      return "$" + Number(valor).toLocaleString("es-CO", { maximumFractionDigits: 0 });
+    }
+
+    function estado(id, valor, correcto) {
+      const elemento = document.getElementById(id);
+      elemento.textContent = valor;
+      elemento.classList.toggle("status-ok", correcto);
+      elemento.classList.toggle("status-notice", !correcto);
+    }
+
+    async function cargarOperacion() {
+      const boton = document.getElementById("actualizar-operacion");
+      const error = document.getElementById("error-operacion");
+      boton.disabled = true;
+      error.innerHTML = "";
+      try {
+        const datos = await api.obtenerEstadoOperacion(usuario.id_usuario);
+        estado("estado-api", datos.estado_api, datos.estado_api === "Operativa");
+        estado("estado-bd", datos.estado_base_datos, datos.estado_base_datos === "Conectada");
+        estado("estado-mercado", datos.fuente_mercado, true);
+        estado("estado-alertas", datos.estado_alertas, datos.estado_alertas.includes("configurado"));
+        document.getElementById("metric-usuarios").textContent = datos.total_usuarios;
+        document.getElementById("metric-simulaciones").textContent = datos.total_simulaciones;
+        document.getElementById("metric-capital").textContent = formatoMoneda(datos.capital_total_simulado);
+        document.getElementById("metric-rendimiento").textContent = `${Number(datos.rendimiento_promedio).toFixed(2)}%`;
+        document.getElementById("actualizado").textContent = new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+      } catch (errorPeticion) {
+        error.innerHTML = `<div class="mensaje-error">${errorPeticion.message}</div>`;
+      } finally {
+        boton.disabled = false;
+      }
+    }
+
+    document.getElementById("actualizar-operacion").addEventListener("click", cargarOperacion);
+  </script>
+</body>
+</html>

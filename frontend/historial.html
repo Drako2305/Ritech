@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RiTech · Historial</title>
+  <link rel="stylesheet" href="css/estilos.css?v=20261108a" />
+  <script src="js/tema.js?v=20261108a"></script>
+</head>
+<body>
+  <div id="barra"></div>
+
+  <main class="app-shell">
+    <header class="page-intro">
+      <div>
+        <span class="section-kicker">TU ACTIVIDAD</span>
+        <h1>Decisiones que dejan huella.</h1>
+        <p>Revisa cómo han evolucionado tus simulaciones y sus alertas.</p>
+      </div>
+      <a class="text-action" href="simular.html">Nueva simulación <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <section class="history-metrics" id="resumen-historial" aria-live="polite">
+      <article class="metric-panel"><span>Simulaciones</span><strong id="metric-total">—</strong><small>escenarios registrados</small></article>
+      <article class="metric-panel"><span>Capital analizado</span><strong id="metric-capital">—</strong><small>capital inicial acumulado</small></article>
+      <article class="metric-panel"><span>Rendimiento promedio</span><strong id="metric-rendimiento">—</strong><small>en tus simulaciones</small></article>
+    </section>
+
+    <section class="app-panel history-chart-panel">
+      <div class="panel-heading">
+        <div><span class="section-kicker">EVOLUCIÓN</span><h2>Valor final por simulación</h2></div>
+        <span class="chart-unit">COP</span>
+      </div>
+      <div class="chart-wrap history-chart-wrap">
+        <canvas id="chart-historial" role="img" aria-label="Evolución del valor final por simulación"></canvas>
+        <div id="chart-historial-vacio" class="chart-empty"><span class="empty-glyph">⌁</span><p>Aún no hay una curva que mostrar</p><small>Tu primera simulación aparecerá aquí</small></div>
+      </div>
+    </section>
+
+    <div class="history-columns">
+      <section class="app-panel table-panel">
+        <div class="panel-heading"><div><span class="section-kicker">REGISTRO</span><h2>Simulaciones</h2></div></div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Fecha</th><th>Capital inicial</th><th>NASDAQ</th><th>Rendimiento ×2</th><th>Monto final</th></tr></thead>
+          <tbody id="tabla-simulaciones"></tbody>
+        </table></div>
+        <p id="mensaje-sin-simulaciones" class="empty-copy" style="display:none">Aún no tienes simulaciones. Crea la primera para iniciar tu historial.</p>
+      </section>
+
+      <section class="app-panel alerts-panel">
+        <div class="panel-heading"><div><span class="section-kicker">CONTEXTO DE MERCADO</span><h2>Alertas</h2></div><span class="alert-icon">!</span></div>
+        <ul id="lista-alertas" class="lista-alertas"></ul>
+        <p id="mensaje-sin-alertas" class="empty-copy" style="display:none">Aún no hay alertas generadas.</p>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/api.js?v=20261108a"></script>
+  <script src="js/sesion.js?v=20261108a"></script>
+  <script src="js/barra.js?v=20261108a"></script>
+  <script src="js/graficas.js?v=20261108a"></script>
+  <script>
+    const usuario = SesionUsuario.exigirRol(["INVERSIONISTA"]);
+    if (usuario) {
+      renderizarBarra("barra", "historial");
+      cargarHistorial();
+      cargarAlertas();
+    }
+
+    function formatearFecha(iso) {
+      return new Date(iso).toLocaleString("es-CO");
+    }
+
+    function moneda(valor) {
+      return "$" + Number(valor).toLocaleString("es-CO", { maximumFractionDigits: 0 });
+    }
+
+    async function cargarHistorial() {
+      const cuerpoTabla = document.getElementById("tabla-simulaciones");
+      try {
+        const simulaciones = await api.listarSimulaciones(usuario.id_usuario);
+        if (simulaciones.length === 0) {
+          document.getElementById("mensaje-sin-simulaciones").style.display = "block";
+          return;
+        }
+        const ordenadas = [...simulaciones].reverse();
+        const capitalTotal = simulaciones.reduce((suma, item) => suma + Number(item.capital_inicial), 0);
+        const rendimientoPromedio = simulaciones.reduce((suma, item) => suma + Number(item.rendimiento_porcentaje), 0) / simulaciones.length;
+        document.getElementById("metric-total").textContent = simulaciones.length;
+        document.getElementById("metric-capital").textContent = moneda(capitalTotal);
+        document.getElementById("metric-rendimiento").textContent = `${rendimientoPromedio.toFixed(2)}%`;
+        document.getElementById("chart-historial-vacio").hidden = true;
+        Graficas.linea("chart-historial", ordenadas.map((item) => ({
+          valor: Number(item.monto_final),
+          etiqueta: new Date(item.fecha_simulacion).toLocaleDateString("es-CO", { day: "2-digit", month: "short" }),
+        })), { valorFinal: moneda(ordenadas[ordenadas.length - 1].monto_final) });
+        cuerpoTabla.innerHTML = simulaciones.map((s) => {
+          const positivo = Number(s.rendimiento_porcentaje) >= 0;
+          return `
+          <tr>
+            <td>${formatearFecha(s.fecha_simulacion ?? "")}</td>
+            <td>${moneda(s.capital_inicial)}</td>
+            <td class="${positivo ? "valor-positivo" : "valor-negativo"}">${Number(s.variacion_nasdaq) >= 0 ? "+" : ""}${Number(s.variacion_nasdaq).toFixed(2)}%</td>
+            <td class="${positivo ? "valor-positivo" : "valor-negativo"}">${positivo ? "+" : ""}${Number(s.rendimiento_porcentaje).toFixed(2)}%</td>
+            <td>${moneda(s.monto_final)}</td>
+          </tr>`;
+        }).join("");
+      } catch (error) {
+        cuerpoTabla.innerHTML = `<tr><td colspan="5" class="mensaje-error">${error.message}</td></tr>`;
+      }
+    }
+
+    async function cargarAlertas() {
+      const lista = document.getElementById("lista-alertas");
+      try {
+        const alertas = await api.listarAlertas(usuario.id_usuario);
+        if (alertas.length === 0) {
+          document.getElementById("mensaje-sin-alertas").style.display = "block";
+          return;
+        }
+        lista.innerHTML = alertas.map((a) => `
+          <li>
+            <div class="titulo-alerta">${a.titulo}</div>
+            <div>${a.contenido}</div>
+          </li>`).join("");
+      } catch (error) {
+        lista.innerHTML = `<li class="mensaje-error">${error.message}</li>`;
+      }
+    }
+  </script>
+</body>
+</html>

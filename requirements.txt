@@ -1,0 +1,8 @@
+requests
+pytest
+fastapi
+uvicorn
+httpx
+psycopg[binary]
+pydantic[email]
+bcrypt

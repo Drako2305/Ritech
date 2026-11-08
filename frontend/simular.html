@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RiTech · Simulador de inversión</title>
+  <link rel="stylesheet" href="css/estilos.css?v=20261108b" />
+  <script src="js/tema.js?v=20261108a"></script>
+</head>
+<body>
+  <div id="barra"></div>
+
+  <main class="app-shell">
+    <header class="page-intro">
+      <div>
+        <span class="section-kicker">MERCADO · SIMULADOR</span>
+        <h1>Tu capital, frente al NASDAQ 100.</h1>
+        <p>Prueba el escenario real del día o inventa una variación y observa el efecto de la regla ×2.</p>
+      </div>
+      <div class="market-status" id="estado-mercado"><span></span> Conectando con el mercado…</div>
+    </header>
+
+    <section class="market-panel" id="panel-mercado" aria-live="polite">
+      <div class="market-main">
+        <div class="market-symbol-wrap">
+          <span class="market-symbol" id="mercado-simbolo">QQQ</span>
+          <div>
+            <strong id="mercado-nombre">Invesco QQQ · NASDAQ 100</strong>
+            <small>Cotización de referencia (Yahoo Finance)</small>
+          </div>
+        </div>
+        <div class="market-price-row">
+          <div class="market-price"><span>$</span><strong id="mercado-precio">—</strong><small id="mercado-moneda">USD</small></div>
+          <div class="market-delta" id="mercado-delta">—</div>
+        </div>
+        <div class="market-stats">
+          <div><span>Cierre anterior</span><strong id="mercado-anterior">—</strong></div>
+          <div><span>Máximo del día</span><strong id="mercado-maximo">—</strong></div>
+          <div><span>Mínimo del día</span><strong id="mercado-minimo">—</strong></div>
+          <div><span>Actualizado</span><strong id="mercado-hora">—</strong></div>
+        </div>
+      </div>
+      <div class="market-chart">
+        <canvas id="chart-mercado" aria-label="Evolución del último mes"></canvas>
+        <button class="market-refresh" id="actualizar-mercado" type="button" title="Actualizar cotización">↻</button>
+      </div>
+    </section>
+
+    <div id="zona-mensaje"></div>
+
+    <div class="simulator-grid">
+      <section class="app-panel simulator-form-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="section-kicker">01 / CAPITAL</span>
+            <h2>Define tu inversión</h2>
+          </div>
+          <span class="panel-mark">COP</span>
+        </div>
+
+        <form id="formulario-simulacion">
+          <label for="capital-inicial">Capital que quieres simular</label>
+          <div class="currency-input"><span>$</span><input type="text" id="capital-inicial" inputmode="numeric" autocomplete="off" placeholder="1.000.000" value="1.000.000" required /></div>
+          <div class="quick-amounts" aria-label="Montos rápidos">
+            <button type="button" data-monto="500000">$500 mil</button>
+            <button type="button" data-monto="1000000">$1 millón</button>
+            <button type="button" data-monto="5000000">$5 millones</button>
+            <button type="button" data-monto="10000000">$10 millones</button>
+          </div>
+          <p class="field-note">Mínimo de inversión: $100.000 COP</p>
+
+          <div class="scenario-block">
+            <div class="scenario-head">
+              <label>Variación del NASDAQ 100</label>
+              <div class="scenario-toggle" role="group" aria-label="Modo de variación">
+                <button type="button" class="activa" data-modo="real">Mercado real</button>
+                <button type="button" data-modo="manual">Escenario manual</button>
+              </div>
+            </div>
+
+            <div class="scenario-real" id="escenario-real">
+              <span class="scenario-value" id="variacion-real">—</span>
+              <small>Se usará la variación del día al momento de simular.</small>
+            </div>
+
+            <div class="scenario-manual" id="escenario-manual" hidden>
+              <div class="scenario-value" id="variacion-manual-valor">+2.0%</div>
+              <input type="range" id="variacion-manual" min="-10" max="10" step="0.1" value="2" />
+              <div class="scenario-presets">
+                <button type="button" data-variacion="-5">−5%</button>
+                <button type="button" data-variacion="-2">−2%</button>
+                <button type="button" data-variacion="0">0%</button>
+                <button type="button" data-variacion="2">+2%</button>
+                <button type="button" data-variacion="5">+5%</button>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="boton-principal" id="boton-simular"><span>Simular inversión</span><span aria-hidden="true">↗</span></button>
+        </form>
+      </section>
+
+      <section class="app-panel chart-panel">
+        <div class="panel-heading chart-heading">
+          <div>
+            <span class="section-kicker">02 / PROYECCIÓN</span>
+            <h2>Capital inicial frente a resultado</h2>
+          </div>
+          <span class="chart-unit">COP</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart-proyeccion" role="img" aria-label="Comparación entre capital inicial y monto final"></canvas>
+          <div id="chart-vacio" class="chart-empty"><span class="empty-glyph">↗</span><p>Tu escenario aparecerá aquí</p><small>Ingresa un capital para comenzar</small></div>
+        </div>
+        <div class="chart-legend"><span><i class="legend-dot initial"></i>Capital inicial</span><span><i class="legend-dot final" id="legend-final"></i>Monto final</span></div>
+      </section>
+    </div>
+
+    <section id="tarjeta-resultado" class="result-strip" style="display:none" aria-live="polite">
+      <div class="result-lead"><span class="section-kicker">VALOR FINAL ESTIMADO</span><strong id="res-monto">—</strong><span id="res-diferencia">—</span></div>
+      <div class="result-metric"><span>NASDAQ 100</span><strong id="res-variacion">—</strong></div>
+      <div class="result-metric"><span>Rendimiento RiTech (×2)</span><strong id="res-rendimiento">—</strong></div>
+      <div class="result-metric"><span>Nivel de riesgo</span><strong id="res-riesgo">—</strong></div>
+      <div class="result-alert" id="zona-alerta"></div>
+    </section>
+  </main>
+
+  <script src="js/api.js?v=20261108a"></script>
+  <script src="js/sesion.js?v=20261108a"></script>
+  <script src="js/barra.js?v=20261108a"></script>
+  <script src="js/graficas.js?v=20261108a"></script>
+  <script>
+    const usuario = SesionUsuario.exigirRol(["INVERSIONISTA"]);
+    if (usuario) renderizarBarra("barra", "simular");
+
+    const formulario = document.getElementById("formulario-simulacion");
+    const zonaMensaje = document.getElementById("zona-mensaje");
+    const tarjetaResultado = document.getElementById("tarjeta-resultado");
+    const variacionManual = document.getElementById("variacion-manual");
+    const variacionManualValor = document.getElementById("variacion-manual-valor");
+    const capitalInput = document.getElementById("capital-inicial");
+    let modoVariacion = "real";
+
+    const moneda = (valor) => "$" + Number(valor).toLocaleString("es-CO", { maximumFractionDigits: 0 });
+    const numero = (valor) => Number(valor).toLocaleString("es-CO", { maximumFractionDigits: 2 });
+    const decimal = (valor) => Number(valor).toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const conSigno = (valor) => (Number(valor) >= 0 ? "+" : "") + numero(valor) + "%";
+
+    function formatearCapital() {
+      const digitos = capitalInput.value.replace(/\D/g, "").slice(0, 12);
+      capitalInput.value = digitos ? Number(digitos).toLocaleString("es-CO", { maximumFractionDigits: 0 }) : "";
+    }
+    capitalInput.addEventListener("input", formatearCapital);
+
+    document.querySelectorAll("[data-monto]").forEach((boton) => {
+      boton.addEventListener("click", () => {
+        capitalInput.value = Number(boton.dataset.monto).toLocaleString("es-CO");
+      });
+    });
+
+    document.querySelectorAll("[data-modo]").forEach((boton) => {
+      boton.addEventListener("click", () => {
+        modoVariacion = boton.dataset.modo;
+        document.querySelectorAll("[data-modo]").forEach((b) => b.classList.toggle("activa", b === boton));
+        document.getElementById("escenario-real").hidden = modoVariacion !== "real";
+        document.getElementById("escenario-manual").hidden = modoVariacion !== "manual";
+      });
+    });
+
+    function activarModoManual() {
+      modoVariacion = "manual";
+      document.querySelectorAll("[data-modo]").forEach((b) => b.classList.toggle("activa", b.dataset.modo === "manual"));
+      document.getElementById("escenario-real").hidden = true;
+      document.getElementById("escenario-manual").hidden = false;
+    }
+
+    document.querySelectorAll("[data-variacion]").forEach((boton) => {
+      boton.addEventListener("click", () => {
+        variacionManual.value = boton.dataset.variacion;
+        actualizarVariacionManual();
+      });
+    });
+
+    function actualizarVariacionManual() {
+      variacionManualValor.textContent = conSigno(variacionManual.value);
+      variacionManualValor.classList.toggle("negativo", Number(variacionManual.value) < 0);
+    }
+    variacionManual.addEventListener("input", actualizarVariacionManual);
+    actualizarVariacionManual();
+
+    async function cargarMercado() {
+      const boton = document.getElementById("actualizar-mercado");
+      boton.disabled = true;
+      try {
+        const cotizacion = await api.obtenerCotizacion();
+        const positivo = Number(cotizacion.variacion_porcentaje) >= 0;
+        document.getElementById("mercado-simbolo").textContent = cotizacion.simbolo;
+        document.getElementById("mercado-nombre").textContent = cotizacion.nombre;
+        document.getElementById("mercado-precio").textContent = decimal(cotizacion.precio);
+        document.getElementById("mercado-moneda").textContent = cotizacion.moneda;
+        document.getElementById("mercado-anterior").textContent = "$" + decimal(cotizacion.cierre_anterior);
+        document.getElementById("mercado-maximo").textContent = cotizacion.maximo_dia != null ? "$" + decimal(cotizacion.maximo_dia) : "—";
+        document.getElementById("mercado-minimo").textContent = cotizacion.minimo_dia != null ? "$" + decimal(cotizacion.minimo_dia) : "—";
+        document.getElementById("mercado-hora").textContent = new Date(cotizacion.actualizado_en).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+
+        const delta = document.getElementById("mercado-delta");
+        delta.textContent = `${positivo ? "▲" : "▼"} ${conSigno(cotizacion.variacion_porcentaje)} (${positivo ? "+" : ""}${decimal(cotizacion.variacion_absoluta)})`;
+        delta.classList.toggle("positivo", positivo);
+        delta.classList.toggle("negativo", !positivo);
+
+        const real = document.getElementById("variacion-real");
+        real.textContent = conSigno(cotizacion.variacion_porcentaje);
+        real.classList.toggle("negativo", !positivo);
+
+        document.getElementById("estado-mercado").innerHTML = `<span></span> Mercado en vivo · ${cotizacion.simbolo}`;
+
+        const historial = cotizacion.historial || [];
+        Graficas.sparkline("chart-mercado", historial.map((punto) => ({ valor: punto.cierre })), {
+          color: positivo ? "#60d7a3" : "#ff7d7d",
+          areaColor: positivo ? "rgba(96, 215, 163, 0.35)" : "rgba(255, 125, 125, 0.32)",
+        });
+      } catch (error) {
+        document.getElementById("estado-mercado").innerHTML = `<span class="off"></span> Mercado no disponible · modo manual activo`;
+        document.getElementById("variacion-real").textContent = "—";
+        activarModoManual();
+        zonaMensaje.innerHTML = `<div class="mensaje-error">No se pudo leer la cotización en vivo. Puedes simular igualmente con el escenario manual.</div>`;
+      } finally {
+        boton.disabled = false;
+      }
+    }
+
+    document.getElementById("actualizar-mercado").addEventListener("click", cargarMercado);
+    cargarMercado();
+    window.setInterval(cargarMercado, 60000);
+
+    function nivelRiesgo(variacion) {
+      const absoluta = Math.abs(Number(variacion));
+      if (absoluta >= 6) return { texto: "Alto", clase: "riesgo-alto" };
+      if (absoluta >= 3) return { texto: "Medio", clase: "riesgo-medio" };
+      return { texto: "Bajo", clase: "riesgo-bajo" };
+    }
+
+    formulario.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      zonaMensaje.innerHTML = "";
+      tarjetaResultado.style.display = "none";
+
+      const capital = Number(capitalInput.value.replace(/\D/g, ""));
+      if (!Number.isFinite(capital) || capital < 100000) {
+        zonaMensaje.innerHTML = `<div class="mensaje-error">El capital mínimo de inversión es $100.000 COP.</div>`;
+        capitalInput.focus();
+        return;
+      }
+
+      const boton = document.getElementById("boton-simular");
+      boton.disabled = true;
+
+      try {
+        const datos = {
+          id_usuario: usuario.id_usuario,
+          capital_inicial: capital,
+        };
+        if (modoVariacion === "manual") {
+          datos.variacion_nasdaq = variacionManual.value;
+        }
+
+        const resultado = await api.crearSimulacion(datos);
+        const positivo = Number(resultado.rendimiento_porcentaje) >= 0;
+        const diferencia = Number(resultado.monto_final) - Number(resultado.capital_inicial);
+
+        document.getElementById("res-monto").textContent = moneda(resultado.monto_final);
+        document.getElementById("res-diferencia").textContent = `${positivo ? "Ganancia" : "Pérdida"} estimada: ${positivo ? "+" : "−"}${moneda(Math.abs(diferencia))}`;
+        document.getElementById("res-variacion").textContent = conSigno(resultado.variacion_nasdaq);
+        document.getElementById("res-rendimiento").textContent = conSigno(resultado.rendimiento_porcentaje);
+
+        const riesgo = nivelRiesgo(resultado.variacion_nasdaq);
+        const riesgoEl = document.getElementById("res-riesgo");
+        riesgoEl.textContent = riesgo.texto;
+        riesgoEl.className = riesgo.clase;
+
+        tarjetaResultado.classList.toggle("perdida", !positivo);
+        document.getElementById("legend-final").style.background = positivo ? "#13866f" : "#c4453b";
+        document.getElementById("chart-vacio").hidden = true;
+        Graficas.barras("chart-proyeccion", [
+          { etiqueta: "Capital inicial", valor: Number(resultado.capital_inicial), color: "#d2a84d" },
+          { etiqueta: "Monto final", valor: Number(resultado.monto_final), color: positivo ? "#13866f" : "#c4453b" },
+        ], { formato: moneda });
+
+        const zonaAlerta = document.getElementById("zona-alerta");
+        if (resultado.alerta) {
+          zonaAlerta.innerHTML = `<strong>${resultado.alerta.titulo}</strong><span>${resultado.alerta.contenido}</span>`;
+        } else {
+          zonaAlerta.innerHTML = `<span>Sin alerta disponible para este escenario.</span>`;
+        }
+
+        tarjetaResultado.style.display = "grid";
+        tarjetaResultado.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } catch (error) {
+        zonaMensaje.innerHTML = `<div class="mensaje-error">${error.message}</div>`;
+      } finally {
+        boton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

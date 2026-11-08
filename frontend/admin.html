@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RiTech · Administración</title>
+  <link rel="stylesheet" href="css/estilos.css?v=20261108a" />
+  <script src="js/tema.js?v=20261108a"></script>
+</head>
+<body>
+  <div id="barra"></div>
+
+  <main class="app-shell admin-shell">
+    <header class="page-intro">
+      <div>
+        <span class="section-kicker">CENTRO DE CONTROL</span>
+        <h1>La operación, de un vistazo.</h1>
+        <p>Usuarios, actividad de simulación y rendimiento agregado.</p>
+      </div>
+      <div class="admin-stamp"><span class="admin-pulse"></span> Panel administrador</div>
+    </header>
+
+    <div id="zona-mensaje"></div>
+    <section class="history-metrics admin-metrics" id="grilla-estadisticas"></section>
+
+    <div class="admin-columns">
+      <section class="app-panel admin-chart-panel">
+        <div class="panel-heading"><div><span class="section-kicker">COMPOSICIÓN</span><h2>Usuarios por perfil</h2></div><span class="chart-unit">CUENTAS</span></div>
+        <div class="chart-wrap admin-chart-wrap"><canvas id="chart-usuarios" role="img" aria-label="Cantidad de usuarios por perfil"></canvas></div>
+        <p class="panel-footnote">Distribución calculada sobre las cuentas registradas.</p>
+      </section>
+
+      <section class="app-panel user-management-panel">
+        <div class="panel-heading"><div><span class="section-kicker">ACCESOS</span><h2>Gestión de usuarios</h2></div><span class="table-count" id="conteo-usuarios">—</span></div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Nombre</th><th>Correo</th><th>Perfil y acciones</th><th>Acciones</th></tr></thead>
+          <tbody id="tabla-usuarios"></tbody>
+        </table></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/api.js?v=20261108a"></script>
+  <script src="js/sesion.js?v=20261108a"></script>
+  <script src="js/barra.js?v=20261108a"></script>
+  <script src="js/graficas.js?v=20261108a"></script>
+  <script>
+    const usuario = SesionUsuario.exigirRol(["ADMINISTRADOR"]);
+    const zonaMensaje = document.getElementById("zona-mensaje");
+
+    if (usuario) {
+      renderizarBarra("barra", "admin");
+      cargarEstadisticas();
+      cargarUsuarios();
+    }
+
+    const ROLES = ["INVERSIONISTA", "GESTOR_TI", "ADMINISTRADOR"];
+
+    async function cargarEstadisticas() {
+      const grilla = document.getElementById("grilla-estadisticas");
+      try {
+        const estadisticas = await api.obtenerEstadisticas(usuario.id_usuario);
+        grilla.innerHTML = `
+          ${tarjetaEstadistica(estadisticas.total_usuarios, "Usuarios registrados")}
+          ${tarjetaEstadistica(estadisticas.total_simulaciones, "Simulaciones realizadas")}
+          ${tarjetaEstadistica("$" + Number(estadisticas.capital_total_simulado).toLocaleString("es-CO"), "Capital total simulado")}
+          ${tarjetaEstadistica(Number(estadisticas.rendimiento_promedio).toFixed(2) + "%", "Rendimiento promedio")}
+        `;
+      } catch (error) {
+        grilla.innerHTML = `<div class="mensaje-error">${error.message}</div>`;
+      }
+    }
+
+    function tarjetaEstadistica(valor, etiqueta) {
+      return `<div class="tarjeta-estadistica">
+        <div class="valor">${valor}</div>
+        <div class="etiqueta">${etiqueta}</div>
+      </div>`;
+    }
+
+    async function cargarUsuarios() {
+      const cuerpoTabla = document.getElementById("tabla-usuarios");
+      try {
+        const usuarios = await api.listarUsuarios(usuario.id_usuario);
+        document.getElementById("conteo-usuarios").textContent = `${usuarios.length} cuentas`;
+        const conteos = {
+          INVERSIONISTA: usuarios.filter((u) => u.rol === "INVERSIONISTA").length,
+          GESTOR_TI: usuarios.filter((u) => u.rol === "GESTOR_TI").length,
+          ADMINISTRADOR: usuarios.filter((u) => u.rol === "ADMINISTRADOR").length,
+        };
+        Graficas.barras("chart-usuarios", [
+          { etiqueta: "Inversionista", valor: conteos.INVERSIONISTA, color: "#1d4ed8" },
+          { etiqueta: "Gestor TI", valor: conteos.GESTOR_TI, color: "#d2a84d" },
+          { etiqueta: "Administrador", valor: conteos.ADMINISTRADOR, color: "#294c61" },
+        ]);
+        cuerpoTabla.innerHTML = usuarios.map((u) => filaUsuario(u)).join("");
+        usuarios.forEach((u) => activarAccionesFila(u));
+      } catch (error) {
+        cuerpoTabla.innerHTML = `<tr><td colspan="4" class="mensaje-error">${error.message}</td></tr>`;
+      }
+    }
+
+    function filaUsuario(u) {
+      const opcionesRol = ROLES.map((rol) =>
+        `<option value="${rol}" ${rol === u.rol ? "selected" : ""}>${rol}</option>`
+      ).join("");
+      return `
+        <tr data-id="${u.id_usuario}">
+          <td>${u.nombre}</td>
+          <td>${u.correo}</td>
+          <td>
+            <div class="acciones-fila">
+              <select class="selector-rol">${opcionesRol}</select>
+              <button class="boton-secundario boton-guardar-rol">Guardar</button>
+            </div>
+          </td>
+          <td>
+            <button class="boton-peligro boton-eliminar">Eliminar</button>
+          </td>
+        </tr>`;
+    }
+
+    function activarAccionesFila(u) {
+      const fila = document.querySelector(`tr[data-id="${u.id_usuario}"]`);
+      if (!fila) return;
+
+      fila.querySelector(".boton-guardar-rol").addEventListener("click", async () => {
+        const nuevoRol = fila.querySelector(".selector-rol").value;
+        try {
+          await api.cambiarRol(u.id_usuario, usuario.id_usuario, nuevoRol);
+          zonaMensaje.innerHTML = `<div class="mensaje-exito">Rol actualizado.</div>`;
+        } catch (error) {
+          zonaMensaje.innerHTML = `<div class="mensaje-error">${error.message}</div>`;
+        }
+      });
+
+      fila.querySelector(".boton-eliminar").addEventListener("click", async () => {
+        if (u.id_usuario === usuario.id_usuario) {
+          zonaMensaje.innerHTML = `<div class="mensaje-error">No puedes eliminar tu propio usuario.</div>`;
+          return;
+        }
+        if (!confirm(`¿Eliminar a ${u.nombre}?`)) return;
+        try {
+          await api.eliminarUsuario(u.id_usuario, usuario.id_usuario);
+          fila.remove();
+          zonaMensaje.innerHTML = `<div class="mensaje-exito">Usuario eliminado.</div>`;
+        } catch (error) {
+          zonaMensaje.innerHTML = `<div class="mensaje-error">${error.message}</div>`;
+        }
+      });
+    }
+  </script>
+</body>
+</html>

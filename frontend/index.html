@@ -1,0 +1,260 @@
+﻿<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RiTech · Invierte con el doble del NASDAQ 100</title>
+  <link rel="stylesheet" href="css/estilos.css?v=20261108a" />
+  <script src="js/tema.js?v=20261108a"></script>
+</head>
+<body class="landing-page">
+  <header class="topbar">
+    <div class="topbar-inner container">
+      <div class="brand-wrap">
+        <div class="brand-mark">R</div>
+        <div>
+          <span class="brand-name">RiTech</span>
+          <span class="brand-tag">SAS</span>
+        </div>
+      </div>
+
+      <nav class="main-nav">
+        <a href="#features">Características</a>
+        <a href="#how">Cómo funciona</a>
+      </nav>
+
+      <button class="nav-cta" type="button" onclick="document.getElementById('auth-card').scrollIntoView({behavior:'smooth'})">
+        Iniciar sesión
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero container">
+      <div class="hero-copy">
+        <span class="eyebrow">Análisis financiero inteligente</span>
+        <h1>Invierte con el doble del NASDAQ 100.</h1>
+        <p>
+          Simula inversiones con la variación real del mercado, recibe alertas generadas
+          por IA y toma decisiones con una visión más clara del riesgo.
+        </p>
+
+        <div class="hero-actions">
+          <button class="primary-button" type="button" onclick="document.getElementById('auth-card').scrollIntoView({behavior:'smooth'})">
+            Crear cuenta gratis
+          </button>
+          <button class="secondary-button" type="button" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+            Conocer RiTech
+          </button>
+        </div>
+
+        <div class="hero-metrics">
+          <div>
+            <strong>×2</strong>
+            <span>Regla de negocio</span>
+          </div>
+          <div>
+            <strong>IA</strong>
+            <span>Alertas de mercado</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="panel-preview">
+          <div class="preview-topbar">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+
+          <div class="preview-summary">
+            <div>
+              <p>Valor simulado</p>
+              <h3>$12.684.000</h3>
+            </div>
+            <div class="delta-pill">+6.8%</div>
+          </div>
+
+          <div class="preview-grid">
+            <div class="mini-card">
+              <span>Capital</span>
+              <strong>$2.000.000</strong>
+            </div>
+            <div class="mini-card accent">
+              <span>Rendimiento</span>
+              <strong>+6.8%</strong>
+            </div>
+            <div class="mini-card">
+              <span>NASDAQ</span>
+              <strong>+3.4%</strong>
+            </div>
+            <div class="mini-card">
+              <span>Alertas</span>
+              <strong>14</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="features container">
+      <div class="section-heading">
+        <span class="eyebrow dark">Todo lo que el software hace por ti</span>
+        <h2>Todo en una sola plataforma.</h2>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-icon">01</div>
+          <h3>Duplica cada movimiento del mercado</h3>
+          <p>Si el NASDAQ 100 sube 2%, tu simulación puede ganar 4% con la regla de negocio ×2.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">02</div>
+          <h3>Mercado real, al instante</h3>
+          <p>Usa variaciones reales del día para calcular lo que podría rendir tu capital.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">03</div>
+          <h3>Tu analista con IA</h3>
+          <p>Recibe alertas con contexto del mercado, noticias relevantes y recomendaciones.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon">04</div>
+          <h3>Historial y control</h3>
+          <p>Consulta simulaciones pasadas, métricas y panel administrativo según tu rol.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="how" class="steps container">
+      <div class="section-heading">
+        <span class="eyebrow dark">Cómo funciona</span>
+        <h2>Del registro a la decisión en 4 pasos.</h2>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-item">
+          <span>1</span>
+          <h3>Regístrate</h3>
+          <p>El registro está disponible para inversionistas. Gestores y administradores ingresan con cuentas asignadas.</p>
+        </div>
+        <div class="step-item">
+          <span>2</span>
+          <h3>Simula</h3>
+          <p>Ingresa tu capital y obtén el rendimiento estimado al instante.</p>
+        </div>
+        <div class="step-item">
+          <span>3</span>
+          <h3>Recibe alerta IA</h3>
+          <p>Consulta el contexto del mercado y las noticias que influyen.</p>
+        </div>
+        <div class="step-item">
+          <span>4</span>
+          <h3>Decide</h3>
+          <p>Usa el historial, el dashboard y la administración desde un panel único.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-section container">
+      <div class="auth-card" id="auth-card">
+        <div class="pestanas">
+          <button id="pestana-login" class="activa" type="button">Iniciar sesión</button>
+          <button id="pestana-registro" type="button">Registrarme</button>
+        </div>
+
+        <form id="formulario-login">
+          <label for="login-correo">Correo</label>
+          <input type="email" id="login-correo" placeholder="inversionista@ritech.com" required />
+          <label for="login-contrasena">Contraseña</label>
+          <input type="password" id="login-contrasena" placeholder="••••••••" required />
+          <button type="submit" class="boton-principal">Entrar</button>
+        </form>
+
+        <form id="formulario-registro" style="display:none">
+          <label for="registro-nombre">Nombre completo</label>
+          <input type="text" id="registro-nombre" placeholder="María López" required />
+          <label for="registro-correo">Correo electrónico</label>
+          <input type="email" id="registro-correo" placeholder="nombre@correo.com" required />
+          <label for="registro-contrasena">Contraseña</label>
+          <input type="password" id="registro-contrasena" minlength="6" placeholder="Mínimo 6 caracteres" required />
+          <button type="submit" class="boton-principal">Crear cuenta</button>
+        </form>
+
+        <div id="zona-mensaje"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/api.js?v=20261108a"></script>
+  <script src="js/sesion.js?v=20261108a"></script>
+  <script>
+    const pestanaLogin = document.getElementById("pestana-login");
+    const pestanaRegistro = document.getElementById("pestana-registro");
+    const formularioLogin = document.getElementById("formulario-login");
+    const formularioRegistro = document.getElementById("formulario-registro");
+    const zonaMensaje = document.getElementById("zona-mensaje");
+
+    function mostrarPestana(pestana, { limpiarMensaje = true } = {}) {
+      const esLogin = pestana === "login";
+      pestanaLogin.classList.toggle("activa", esLogin);
+      pestanaRegistro.classList.toggle("activa", !esLogin);
+      formularioLogin.style.display = esLogin ? "block" : "none";
+      formularioRegistro.style.display = esLogin ? "none" : "block";
+      if (limpiarMensaje) zonaMensaje.innerHTML = "";
+    }
+
+    function mostrarError(mensaje) {
+      zonaMensaje.innerHTML = `<div class="mensaje-error">${mensaje}</div>`;
+    }
+
+    function mostrarExito(mensaje) {
+      zonaMensaje.innerHTML = `<div class="mensaje-exito">${mensaje}</div>`;
+    }
+
+    pestanaLogin.addEventListener("click", () => mostrarPestana("login"));
+    pestanaRegistro.addEventListener("click", () => mostrarPestana("registro"));
+
+    formularioLogin.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      zonaMensaje.innerHTML = "";
+      try {
+        const usuario = await api.iniciarSesion({
+          correo: document.getElementById("login-correo").value,
+          contrasena: document.getElementById("login-contrasena").value,
+        });
+        SesionUsuario.guardar(usuario);
+        window.location.href = SesionUsuario.paginaInicial(usuario);
+      } catch (error) {
+        mostrarError(error.message);
+      }
+    });
+
+    formularioRegistro.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      zonaMensaje.innerHTML = "";
+      try {
+        const usuario = await api.registrarUsuario({
+          nombre: document.getElementById("registro-nombre").value,
+          correo: document.getElementById("registro-correo").value,
+          contrasena: document.getElementById("registro-contrasena").value,
+          rol: "INVERSIONISTA",
+        });
+        SesionUsuario.guardar(usuario);
+        window.location.href = SesionUsuario.paginaInicial(usuario);
+      } catch (error) {
+        mostrarError(error.message);
+      }
+    });
+
+    if (SesionUsuario.obtener()) {
+      window.location.href = "simular.html";
+    }
+  </script>
+</body>
+</html>
